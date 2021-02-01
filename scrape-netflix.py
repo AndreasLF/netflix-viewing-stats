@@ -21,6 +21,22 @@ html = html_bytes.decode("utf-8")
 
 # Parse html
 soup = BeautifulSoup(html, 'html.parser')
+
+
+# Find the season selector element
+season_selector = soup.find(attrs={"id": "undefined-select"})
+# Find all option elements in the season selector element
+seasons = season_selector.find_all("option")
+
+# Create a dictionairy with season names and their value
+season_dict = {}
+for season in seasons:
+    value = int(season.get("value"))
+    season_name = season.contents[0]
+    season_dict[season_name] = value
+
+print(season_dict)
+
 episode_metadata = soup.find_all("div", class_="episode-metadata")
 
 # Loop through episodes
