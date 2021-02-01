@@ -4,44 +4,64 @@ from urllib.request import urlopen
 import re
 from bs4 import BeautifulSoup
 
-# Series title
-title = "Suits"
 
-# Make a google search on netlfix.com
-query = '{} site:netflix.com'.format(title)
-result = search(query, lang="dk")
+def get_episode_runtime(title, season, episode):
+    """Gets the runtime of a series episode on Netflix.
 
-# Take the first url
-url = result[0]
+    Notice that the language is set to Danish. Netflix results will be in Danish
 
-# Open the page and decode to html string
-page = urlopen(url)
-html_bytes = page.read()
-html = html_bytes.decode("utf-8")
+    Args:
+        title (str): The series title.
+        season (str): The season name.
+        episode (str): The episode name.
 
-# Parse html
-soup = BeautifulSoup(html, 'html.parser')
+    Returns:
+        str: The duration of the series episode.
+    """
+
+    # Make a google search on netlfix.com
+    query = '{} site:netflix.com'.format(title)
+    result = search(query, lang="dk")
+
+    # Take the first url
+    url = result[0]
+
+    # Open the page and decode to html string
+    page = urlopen(url)
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+
+    # Parse html
+    soup = BeautifulSoup(html, 'html.parser')
 
 
-# Find the season selector element
-season_selector = soup.find(attrs={"id": "undefined-select"})
-# Find all option elements in the season selector element
-seasons = season_selector.find_all("option")
+    # Find the season selector element
+    season_selector = soup.find(attrs={"id": "undefined-select"})
+    # Find all option elements in the season selector element
+    season_selector = season_selector.find_all("option")
 
-# Create a dictionairy with season names and their value
-season_dict = {}
-for season in seasons:
-    value = int(season.get("value"))
-    season_name = season.contents[0]
-    season_dict[season_name] = value
+    # Create a dictionairy with season names and their value
+    season_dict = {}
+    for s in season_selector:
+        value = int(s.get("value"))
+        season_name = s.contents[0]
+        season_dict[season_name] = value
 
-print(season_dict)
+    print(season_dict)
 
-episode_metadata = soup.find_all("div", class_="episode-metadata")
 
-# Loop through episodes
-for episode in episode_metadata:
-    # Get title and duration
-    title = episode.find(attrs={"class": "episode-title"}).contents[0]
-    runtime = episode.find(attrs={"class": "episode-runtime"}).contents[0]
-    print(title, runtime)
+    season_containers = soup.find_all("div", class_="season")
+
+    episode_metadata = season_containers[season_dict[season]].find_all("div", class_="episode-metadata")
+
+    # Loop through episodes
+    for ep in episode_metadata:
+        # Get title
+        episode_name = ep.find(attrs={"class": "episode-title"}).contents[0]
+
+        regex = ".*{}$".format(episode)
+        if re.search(regex, episode_name):
+            runtime = ep.find(attrs={"class": "episode-runtime"}).contents[0]
+            return runtime
+
+# print(get_episode_runtime("Suits", "Sæson 1", "Pilot Del 1 & 2"))
