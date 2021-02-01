@@ -5,6 +5,30 @@ import re
 from bs4 import BeautifulSoup
 
 
+def get_english_title(title):
+    # Make a google search on netlfix.com
+    query = '{} site:netflix.com'.format(title)
+    result = search(query, lang="en")
+
+    # Take the first url
+    url = result[0]
+
+    r = re.findall("https://www.netflix.com/(.*)/title/(.*)", url)
+    netflix_id = r[0][1]
+
+    url = "https://www.netflix.com/dk-en/title/{}".format(netflix_id)
+    
+    # Open the page and decode to html string
+    page = urlopen(url)
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+
+    # Parse html
+    soup = BeautifulSoup(html, 'html.parser')
+    title_element = soup.find(attrs={"class": "title-title"})
+    return title_element.contents[0]
+
+
 def get_episode_runtime(title, season, episode):
     """Gets the runtime of a series episode on Netflix.
 
@@ -64,4 +88,5 @@ def get_episode_runtime(title, season, episode):
             runtime = ep.find(attrs={"class": "episode-runtime"}).contents[0]
             return runtime
 
-# print(get_episode_runtime("Suits", "Sæson 1", "Pilot Del 1 & 2"))
+# print(get_episode_runtime("Kyle XY", "Season 2", "Time of Death"))
+# print(get_english_title("En mand med tusind ansigter"))
