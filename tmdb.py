@@ -18,7 +18,7 @@ def tmdb(query):
     Returns:
         json: Results. 
     """
-    
+
     url = "https://api.themoviedb.org/3/{}".format(query)
     webURL = urlopen(url)
     data = webURL.read()
@@ -39,8 +39,23 @@ def search_movie(search_string, api_key):
     query = "movie/{}?api_key={}".format(movie_id, api_key)
     result = tmdb(query)
 
-    print(result)
+    return result
 
-# search_movie("Inception", API_KEY)
+def get_episode(search_string, season_number, episode_number, api_key):
+     # Replace space and & 
+    search_string = search_string.replace(" ", "%20").replace("&", "%26")
+    # Create the search url
+    query = "search/tv?api_key={}&page=1&query={}".format(api_key, search_string)
+    result = tmdb(query)
 
+    tv_id = result["results"][0]["id"]
+
+    query = "tv/{}/season/{}/episode/{}?api_key={}&append_to_response=external_ids".format(tv_id, season_number, episode_number, api_key)
+    result = tmdb(query)
+    # print(result)
+    return result
+    
+
+# print(get_episode("Suits", 1, 1, API_KEY)["external_ids"]["imdb_id"])
+# print(get_episode("Suits", 1, 1, API_KEY))
 
