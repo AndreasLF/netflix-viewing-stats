@@ -4,10 +4,12 @@ import re
 from bs4 import BeautifulSoup
 
 # Get API key for tmdb
-with open('tmdb-api-key.txt') as f:
-    json_data = json.load(f)
-    API_KEY = json_data["api"]
-    f.close()
+def get_api_key_from_file(path):
+    with open(path) as f:
+        json_data = json.load(f)
+        API_KEY = json_data["api"]
+        f.close()
+    return API_KEY
 
 def tmdb(query):
     """Make api request 
@@ -94,6 +96,7 @@ def get_imdb_runtime(imdb_id):
     return minutes
 
 
+# print(search_movie("Inception", get_api_key_from_file('tmdb-api-key.txt'))["runtime"])
 # print(get_imdb_runtime("tt1973786"))
 # print(get_episode("Suits", 1, 1, API_KEY)["external_ids"]["imdb_id"])
 # print(get_episode("Suits", 1, 1, API_KEY))
