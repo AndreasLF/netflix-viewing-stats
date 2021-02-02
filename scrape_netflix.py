@@ -10,23 +10,29 @@ def get_english_title(title):
     query = '{} site:netflix.com'.format(title)
     result = search(query, lang="en")
 
-    # Take the first url
-    url = result[0]
+    if result:
 
-    r = re.findall("https://www.netflix.com/(.*)/title/(.*)", url)
-    netflix_id = r[0][1]
+        # Take the first url
+        url = result[0]
 
-    url = "https://www.netflix.com/dk-en/title/{}".format(netflix_id)
-    
-    # Open the page and decode to html string
-    page = urlopen(url)
-    html_bytes = page.read()
-    html = html_bytes.decode("utf-8")
+        r = re.findall("https://www.netflix.com/(.*)/title/(.*)", url)
+        netflix_id = r[0][1]
 
-    # Parse html
-    soup = BeautifulSoup(html, 'html.parser')
-    title_element = soup.find(attrs={"class": "title-title"})
-    return title_element.contents[0]
+        url = "https://www.netflix.com/dk-en/title/{}".format(netflix_id)
+        
+        # Open the page and decode to html string
+        page = urlopen(url)
+        html_bytes = page.read()
+        html = html_bytes.decode("utf-8")
+
+        # Parse html
+        soup = BeautifulSoup(html, 'html.parser')
+        title_element = soup.find(attrs={"class": "title-title"})
+        english_title = title_element.contents[0]
+    else:
+        english_title = None
+
+    return english_title
 
 
 def get_episode_runtime(title, season, episode):
