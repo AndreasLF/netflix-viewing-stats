@@ -11,11 +11,14 @@ def get_english_title(title):
     result = search(query, lang="en")
 
     if result:
-
         # Take the first url
         url = result[0]
 
         r = re.findall("https://www.netflix.com/(.*)/title/(.*)", url)
+
+        if not r:
+            return None 
+
         netflix_id = r[0][1]
 
         url = "https://www.netflix.com/dk-en/title/{}".format(netflix_id)
@@ -93,6 +96,7 @@ def get_episode_runtime(title, season, episode):
         if re.search(regex, episode_name):
             runtime = ep.find(attrs={"class": "episode-runtime"}).contents[0]
             return runtime
+
 
 # print(get_episode_runtime("Kyle XY", "Season 2", "Time of Death"))
 # print(get_english_title("En mand med tusind ansigter"))
