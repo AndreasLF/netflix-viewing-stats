@@ -1,5 +1,7 @@
 import json
 from urllib.request import urlopen
+import re
+from bs4 import BeautifulSoup
 
 # Get API key for tmdb
 with open('tmdb-api-key.txt') as f:
@@ -55,7 +57,44 @@ def get_episode(search_string, season_number, episode_number, api_key):
     # print(result)
     return result
     
+def get_imdb_runtime(imdb_id):
+    """ Get runtime from imdb in minutes.
 
+    Args:
+    imdb_id (string): Is the imdb id
+
+    Returns:
+    int: Runtime in minutes
+    """
+
+    # Define url
+    url = "https://www.imdb.com/title/{}/".format(imdb_id)
+    
+    # Open the page and decode to html string
+    page = urlopen(url)
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+
+    # Parse html
+    soup = BeautifulSoup(html, 'html.parser')
+    title_bar_element = soup.find(attrs={"class": "titleBar"})
+    time_element = title_bar_element.find("time")
+
+    time_string = time_element.contents[0] 
+    time_list = time_string.strip().split(" ")
+
+    if len(time_list) == 2:
+        hours = int(time_list[0].strip("h"))
+        minutes = int(time_list[1].strip("min"))
+
+        minutes = minutes + hours*60
+    else:
+        minutes = int(time_list[0].strip("min"))
+
+    return minutes
+
+
+# print(get_imdb_runtime("tt1973786"))
 # print(get_episode("Suits", 1, 1, API_KEY)["external_ids"]["imdb_id"])
 # print(get_episode("Suits", 1, 1, API_KEY))
 
