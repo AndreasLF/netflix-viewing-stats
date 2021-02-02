@@ -93,15 +93,17 @@ def get_imdb_runtime(imdb_id):
     time_list = time_string.strip().split(" ")
 
     if len(time_list) == 2:
-        hours = int(time_list[0].strip("h"))
-        minutes = int(time_list[1].strip("min"))
+        hours = int(time_list[0].replace("h", ""))
+        minutes = int(time_list[1].replace("min", ""))
 
         minutes = minutes + hours*60
     else:
-        minutes = int(time_list[0].strip("min"))
+        if "h" in time_list[0]:
+            minutes = int(time_list[0].replace("h","")) * 60
+        else:
+            minutes = int(time_list[0].replace("min",""))
 
     return minutes
-
 
 def get_episode_imdb_id(api_key, title, episode_name, season_number=None):
     """ Gets the IMDB id of a tv show episode
@@ -210,10 +212,33 @@ def get_episode_imdb_id(api_key, title, episode_name, season_number=None):
                 # imdb_id = None
     return imdb_id
 
+def get_series_runtime(api_key, title):
+     # Parse search string
+    search_string = quote(title)
+    # Create the search url
+    query = "search/tv?api_key={}&page=1&query={}".format(api_key, search_string)
+    result = tmdb(query)
+
+    if result["results"]:
+        tv_id = result["results"][0]["id"]
+
+        # Get tv series
+        query = "tv/{}?api_key={}&append_to_response=external_ids".format(tv_id, api_key)
+        result = tmdb(query)
+
+        runtime = result["episode_run_time"][0]
+    else: 
+        runtime = None
+
+    return runtime
 
 
-API_KEY = get_api_key_from_file('tmdb-api-key.txt')
-print(get_episode_imdb_id(API_KEY, "Suits","She Knows"))
+
+
+
+# API_KEY = get_api_key_from_file('tmdb-api-key.txt')
+# print(get_series_runtime(API_KEY, "Suits"))
+# print(get_episode_imdb_id(API_KEY, "Suits","She Knows"))
 # print(search_movie("Rosenøen", get_api_key_from_file('tmdb-api-key.txt')))
 # print(get_imdb_runtime("tt1973786"))
 # print(get_episode("Suits", 1, 1, API_KEY)["external_ids"]["imdb_id"])
