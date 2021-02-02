@@ -1,5 +1,6 @@
 import json
 from urllib.request import urlopen
+from urllib.parse import quote
 import re
 from bs4 import BeautifulSoup
 
@@ -32,31 +33,37 @@ def tmdb(query):
     return JSON_object
 
 def search_movie(search_string, api_key):
-    # Replace space and & 
-    search_string = search_string.replace(" ", "%20").replace("&", "%26")
+    # Parse search string
+    search_string = quote(search_string)
     # Create the search url
     query = "search/movie?api_key={}&query={}&page=1".format(api_key, search_string)
     result = tmdb(query)
     
-    movie_id = result["results"][0]["id"]
+    if result["results"]:
+        movie_id = result["results"][0]["id"]
 
-    query = "movie/{}?api_key={}".format(movie_id, api_key)
-    result = tmdb(query)
+        query = "movie/{}?api_key={}".format(movie_id, api_key)
+        result = tmdb(query)
+    else:
+        return None
 
     return result
 
 def get_episode(search_string, season_number, episode_number, api_key):
-     # Replace space and & 
-    search_string = search_string.replace(" ", "%20").replace("&", "%26")
+    # Parse search string
+    search_string = quote(search_string)
     # Create the search url
     query = "search/tv?api_key={}&page=1&query={}".format(api_key, search_string)
     result = tmdb(query)
 
-    tv_id = result["results"][0]["id"]
+    if result["results"]:
+        tv_id = result["results"][0]["id"]
 
-    query = "tv/{}/season/{}/episode/{}?api_key={}&append_to_response=external_ids".format(tv_id, season_number, episode_number, api_key)
-    result = tmdb(query)
-    # print(result)
+        query = "tv/{}/season/{}/episode/{}?api_key={}&append_to_response=external_ids".format(tv_id, season_number, episode_number, api_key)
+        result = tmdb(query)
+    else:
+        return None
+
     return result
     
 def get_imdb_runtime(imdb_id):
@@ -96,7 +103,7 @@ def get_imdb_runtime(imdb_id):
     return minutes
 
 
-# print(search_movie("Inception", get_api_key_from_file('tmdb-api-key.txt'))["runtime"])
+# print(search_movie("Rosenøen", get_api_key_from_file('tmdb-api-key.txt')))
 # print(get_imdb_runtime("tt1973786"))
 # print(get_episode("Suits", 1, 1, API_KEY)["external_ids"]["imdb_id"])
 # print(get_episode("Suits", 1, 1, API_KEY))
