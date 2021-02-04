@@ -205,16 +205,16 @@ class NetflixMovie:
         return runtime
 
    
-time1 = time.time()
+# time1 = time.time()
 
-movie = NetflixMovie("Rosenøen", "Date")
-movie.set_tmdb_api_key_from_file("tmdb-api-key.txt")
-movie.allow_netflix_scraping = True
-title = movie.get_movie_runtime(True)
+# movie = NetflixMovie("Rosenøen", "Date")
+# movie.set_tmdb_api_key_from_file("tmdb-api-key.txt")
+# movie.allow_netflix_scraping = True
+# title = movie.get_movie_runtime(True)
 
-print(time.time() - time1)
+# print(time.time() - time1)
 
-print(title)
+# print(title)
 
 def get_episode(search_string, season_number, episode_number, api_key):
     # Parse search string
