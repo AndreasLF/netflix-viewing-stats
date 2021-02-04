@@ -172,7 +172,10 @@ class NetflixMovie:
                 minutes = int(time_list[1].replace(" min.", ""))
                 runtime = minutes + hours*60
             except:
-                runtime = int(time_string.replace(" min.", ""))
+                try: 
+                    runtime = int(time_string.replace(" min.", ""))
+                except:
+                    return None
         else:
             runtime = None
         return runtime
@@ -187,7 +190,6 @@ class NetflixMovie:
             int: Movie runtime in minutes. None if no runtime was found
         """
         title = self.title
-        API_KEY = self.API_KEY
 
         result = self.__search_movie(title)
 
