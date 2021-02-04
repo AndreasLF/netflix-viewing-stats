@@ -118,9 +118,12 @@ class NetflixMovie:
             url = "https://www.netflix.com/dk-en/title/{}".format(netflix_id)
             
             # Open the page and decode to html string
-            page = urlopen(url)
-            html_bytes = page.read()
-            html = html_bytes.decode("utf-8")
+            try:
+                page = urlopen(url)
+                html_bytes = page.read()
+                html = html_bytes.decode("utf-8")
+            except:
+                return None
 
             # Parse html
             soup = BeautifulSoup(html, 'html.parser')
@@ -156,9 +159,12 @@ class NetflixMovie:
                 return None 
 
             # Open the page and decode to html string
-            page = urlopen(url)
-            html_bytes = page.read()
-            html = html_bytes.decode("utf-8")
+            try:
+                page = urlopen(url)
+                html_bytes = page.read()
+                html = html_bytes.decode("utf-8")
+            except: 
+                return None 
 
             # Parse html
             soup = BeautifulSoup(html, 'html.parser')
@@ -209,7 +215,7 @@ class NetflixMovie:
    
 # time1 = time.time()
 
-# movie = NetflixMovie("Find Nemo", "Date")
+# movie = NetflixMovie("Codename: Geronimo", "Date")
 # movie.set_tmdb_api_key_from_file("tmdb-api-key.txt")
 # movie.allow_netflix_scraping = True
 # title = movie.get_movie_runtime(True)
