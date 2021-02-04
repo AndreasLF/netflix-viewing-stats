@@ -1,53 +1,220 @@
+from googlesearch import search
 import json
 from urllib.request import urlopen
 from urllib.parse import quote
 import re
 from bs4 import BeautifulSoup
+import time
 
-# Get API key for tmdb
-def get_api_key_from_file(path):
-    with open(path) as f:
-        json_data = json.load(f)
-        API_KEY = json_data["api"]
-        f.close()
-    return API_KEY
-
-def tmdb(query):
-    """Make api request 
-
-    Notice that the language is set to Danish. Netflix results will be in Danish
+class NetflixMovie:
+    """ Netflix movie containing movie title and the date it was watched.
 
     Args:
-        query (str): Api query.
+        movie_title (str): The title of the movie.
+        date_watched (str): The date the movie was watched.
 
-    Returns:
-        json: Results. 
+    Attributes:
+        title (str): Movie title.
+        date_watched (int): The date the movie was watched.
+        self.API_KEY (str): TMDB API_KEY
     """
+    def __init__(self, movie_title, date_watched): 
+        self.title = movie_title
+        self.date_watched = date_watched
 
-    url = "https://api.themoviedb.org/3/{}".format(query)
-    webURL = urlopen(url)
-    data = webURL.read()
-    encoding = webURL.info().get_content_charset('utf-8')
-    JSON_object = json.loads(data.decode(encoding))
 
-    return JSON_object
+    def set_tmdb_api_key_from_file(self, path):
+        """ Set the TMDB API key from file. Has to be json format.
 
-def search_movie(search_string, api_key):
-    # Parse search string
-    search_string = quote(search_string)
-    # Create the search url
-    query = "search/movie?api_key={}&query={}&page=1".format(api_key, search_string)
-    result = tmdb(query)
+        Args:
+            path (str): Txt file path.
+        """
+        with open(path) as f:
+            json_data = json.load(f)
+            self.API_KEY = json_data["api"]
+            f.close()
     
-    if result["results"]:
-        movie_id = result["results"][0]["id"]
+    def __tmdb_query(self, query):
+        """Make TMDB api request.
 
-        query = "movie/{}?api_key={}".format(movie_id, api_key)
-        result = tmdb(query)
-    else:
-        return None
+        Notice that the language is set to Danish. Netflix results will be in Danish
 
-    return result
+        Args:
+            query (str): Api query.
+
+        Returns:
+            json: Results. 
+        """
+
+        url = "https://api.themoviedb.org/3/{}".format(query)
+        webURL = urlopen(url)
+        data = webURL.read()
+        encoding = webURL.info().get_content_charset('utf-8')
+        JSON_object = json.loads(data.decode(encoding))
+
+        return JSON_object
+
+    def __search_movie(self, search_string, number_of_search = 1):
+        """ Search for movie on TMDB.
+
+        Args:
+            search_string (str): What to search for, should be the title of the movie.
+            number_of_search (str): If multiple search results exist, this allows you to specifiy which movie to pick from the list. Default: picks the first result from the list
+
+        Returns:
+            json: The result of the TMDB search
+
+        """
+        api_key = self.API_KEY
+
+        # Parse search string
+        search_string = quote(search_string)
+        # Create the search url
+        query = "search/movie?api_key={}&query={}&page=1".format(api_key, search_string)
+        result = self.__tmdb_query(query)
+        
+        if result["results"]:
+            try:
+                movie_id = result["results"][number_of_search-1]["id"]
+            except:
+                movie_id = result["results"][0]["id"]
+
+            query = "movie/{}?api_key={}".format(movie_id, api_key)
+            result =  self.__tmdb_query(query)
+        else:
+            return None
+
+        return result
+
+    
+    def get_netflix_english_title(self):
+        """ Try to scrape the title from Netflix and get the english translation.
+
+        First a Google search is made on Netflix' site and then the Netflix id is obtained and the English 
+        translated site is accessed and scraped.
+
+        Returns:
+            The English title found on Netflix
+        """
+        title = self.title
+
+        # Make a google search on netlfix.com
+        query = '{} site:netflix.com'.format(title)
+        result = search(query, lang="en")
+
+        if result:
+            # Take the first url
+            url = result[0]
+
+            r = re.findall("https://www.netflix.com/(.*)/title/(.*)", url)
+
+            # If site is not as expected return None
+            try:
+                netflix_id = r[0][1]
+            except:
+                return None
+
+            # Create new url
+            url = "https://www.netflix.com/dk-en/title/{}".format(netflix_id)
+            
+            # Open the page and decode to html string
+            page = urlopen(url)
+            html_bytes = page.read()
+            html = html_bytes.decode("utf-8")
+
+            # Parse html
+            soup = BeautifulSoup(html, 'html.parser')
+            # Find the title element
+            title_element = soup.find(attrs={"class": "title-title"})
+            english_title = title_element.contents[0]
+        else:
+            english_title = None
+
+        return english_title
+
+    def get_netflix_runtime(self):
+        """ Try to scrape the runtime from Netflix.
+
+        First a Google search is made on Netflix' site and then the runtime is scraped from the first search result
+
+        Returns:
+            The English title found on Netflix
+        """
+        title = self.title
+
+        # Make a google search on netlfix.com
+        query = '{} site:netflix.com'.format(title)
+        result = search(query, lang="en")
+
+        if result:
+            # Take the first url
+            url = result[0]
+            
+            # Check if url matches the correct format
+            r = re.findall("https://www.netflix.com/(.*)/title/(.*)", url)
+            if not r:
+                return None 
+
+            # Open the page and decode to html string
+            page = urlopen(url)
+            html_bytes = page.read()
+            html = html_bytes.decode("utf-8")
+
+            # Parse html
+            soup = BeautifulSoup(html, 'html.parser')
+            # Find the title element
+            runtime_element = soup.find(attrs={"class": "duration"})
+            time_string = runtime_element.contents[0]
+
+            try: 
+                time_list = time_string.strip().split(" t. ")
+                hours = int(time_list[0])
+                minutes = int(time_list[1].replace(" min.", ""))
+                runtime = minutes + hours*60
+            except:
+                runtime = int(time_list[1].replace(" min.", ""))
+        else:
+            runtime = None
+        return runtime
+
+    def get_movie_runtime(self, scrape_netflix = False):
+        """ Get the movie runtime.
+
+        Args:
+            scrape_netlfix (bool): Scrape Netflix if no match is found on TMDB, time consuming and does not guarantee a result.
+
+        Returns:
+            int: Movie runtime in minutes. None if no runtime was found
+        """
+        title = self.title
+        API_KEY = self.API_KEY
+
+        result = self.__search_movie(title, API_KEY)
+
+        # If a result has been retrieved the runtime is set
+        if result:
+            runtime = int(result["runtime"])
+            
+        else:
+            # Is Netflix scraping set
+            if scrape_netflix:   
+               runtime = self.get_netflix_runtime()
+            else:
+                runtime = None
+        
+        return runtime
+
+   
+time1 = time.time()
+
+movie = NetflixMovie("Rosenøen", "Date")
+movie.set_tmdb_api_key_from_file("tmdb-api-key.txt")
+movie.allow_netflix_scraping = True
+title = movie.get_movie_runtime(True)
+
+print(time.time() - time1)
+
+print(title)
 
 def get_episode(search_string, season_number, episode_number, api_key):
     # Parse search string
@@ -233,10 +400,8 @@ def get_series_runtime(api_key, title):
     return runtime
 
 
-
-
-
 # API_KEY = get_api_key_from_file('tmdb-api-key.txt')
+# print(get_movie_runtime("inception",API_KEY))
 # print(get_series_runtime(API_KEY, "Suits"))
 # print(get_episode_imdb_id(API_KEY, "Suits","She Knows"))
 # print(search_movie("Rosenøen", get_api_key_from_file('tmdb-api-key.txt')))
