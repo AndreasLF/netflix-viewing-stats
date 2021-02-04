@@ -172,7 +172,7 @@ class NetflixMovie:
                 minutes = int(time_list[1].replace(" min.", ""))
                 runtime = minutes + hours*60
             except:
-                runtime = int(time_list[1].replace(" min.", ""))
+                runtime = int(time_string.replace(" min.", ""))
         else:
             runtime = None
         return runtime
