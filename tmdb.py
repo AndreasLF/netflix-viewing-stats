@@ -189,11 +189,11 @@ class NetflixMovie:
         title = self.title
         API_KEY = self.API_KEY
 
-        result = self.__search_movie(title, API_KEY)
+        result = self.__search_movie(title)
 
         # If a result has been retrieved the runtime is set
         if result:
-            runtime = int(result["runtime"])
+            runtime = result["runtime"]
             
         else:
             # Is Netflix scraping set
@@ -207,7 +207,7 @@ class NetflixMovie:
    
 # time1 = time.time()
 
-# movie = NetflixMovie("Rosenøen", "Date")
+# movie = NetflixMovie("Find Nemo", "Date")
 # movie.set_tmdb_api_key_from_file("tmdb-api-key.txt")
 # movie.allow_netflix_scraping = True
 # title = movie.get_movie_runtime(True)
