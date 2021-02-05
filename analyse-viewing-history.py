@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-from tmdb import NetflixMovie
+from tmdb import NetflixMovie, NetflixSeries
 from scrape_netflix import get_english_title
 import time
 
@@ -62,18 +62,51 @@ df = pd.read_csv(file_path)
 # Classify if it is a series or a movie based on the colons in the title
 df["type"] = ["series" if len(y.split(":")) >= 3 else "movie" for y in df["Title"]]
 
-# Only look at the movies
-df = df[df['type'] == "movie"]
-# df = df.iloc[:5,:]
+# # Only look at the movies
+# df = df[df['type'] == "movie"]
+# # df = df.iloc[:5,:]
 
-# Set the runtime column
-df["runtime"] = df.apply(set_runtime, axis=1)
-# df = df.dropna()
+# # Set the runtime column
+# df["runtime"] = df.apply(set_runtime, axis=1)
+# # df = df.dropna()
 
-# Print time it took
+# # Print time it took
+# print(time.time() - time1)
+
+# # Write results to a csv file
+# df.to_csv("netflix_movies_runtime.csv")
+
+# print(df)
+
+
+# Only look at series
+df = df[df['type'] == "series"]
+# df = df.iloc[:10,:]
+
+
+df["series_title"] = df.apply(set_series_title, axis=1)
+
+grouped = df.groupby("series_title")
+# df["runtime"] = df.apply(set_runtime, axis=1)
+
+df_new = pd.DataFrame(columns = ["Title", "Date", "type", "series_title", "runtime"])
+for name, group in grouped:
+
+    # Create series object and get the runtime
+    series = NetflixSeries(name)
+    series.set_tmdb_api_key_from_file("tmdb-api-key.txt")
+    runtime = series.get_runtime()
+
+    # # Set the episode runtime for the whole group
+    group["runtime"] = runtime
+
+    df_new = df_new.append(group)
+
+    df.to_csv("netflix_series_runtime.csv")
+
+
+
+print(df_new)
+
+
 print(time.time() - time1)
-
-# Write results to a csv file
-df.to_csv("netflix_movies_runtime.csv")
-
-print(df)
