@@ -32,6 +32,10 @@ def series_name_split(title):
 
     return (tv_show_title, episode_name, season_number)
 
+def set_series_title(row):
+    title, episode, season = series_name_split(row["Title"])
+    return title
+
 def set_runtime(row):
     # Check if it is a movie
     if row["type"] == "movie":
@@ -79,34 +83,34 @@ df["type"] = ["series" if len(y.split(":")) >= 3 else "movie" for y in df["Title
 # print(df)
 
 
-# Only look at series
-df = df[df['type'] == "series"]
-# df = df.iloc[:10,:]
+def create_series_csv(df):
+    # Only look at series
+    df = df[df['type'] == "series"]
+    # df = df.iloc[:10,:]
 
 
-df["series_title"] = df.apply(set_series_title, axis=1)
+    df["series_title"] = df.apply(set_series_title, axis=1)
 
-grouped = df.groupby("series_title")
-# df["runtime"] = df.apply(set_runtime, axis=1)
+    grouped = df.groupby("series_title")
+    # df["runtime"] = df.apply(set_runtime, axis=1)
 
-df_new = pd.DataFrame(columns = ["Title", "Date", "type", "series_title", "runtime"])
-for name, group in grouped:
+    df_new = pd.DataFrame(columns = ["Title", "Date", "type", "series_title", "runtime"])
+    for name, group in grouped:
 
-    # Create series object and get the runtime
-    series = NetflixSeries(name)
-    series.set_tmdb_api_key_from_file("tmdb-api-key.txt")
-    runtime = series.get_runtime()
+        # Create series object and get the runtime
+        series = NetflixSeries(name)
+        series.set_tmdb_api_key_from_file("tmdb-api-key.txt")
+        runtime = series.get_runtime()
 
-    # # Set the episode runtime for the whole group
-    group["runtime"] = runtime
+        # # Set the episode runtime for the whole group
+        group["runtime"] = runtime
 
-    df_new = df_new.append(group)
+        df_new = df_new.append(group)
 
-    df.to_csv("netflix_series_runtime.csv")
+        df_new.to_csv("netflix_series_runtime.csv")
 
-
-
-print(df_new)
+    print("It took {} minutes to finish".format(time.time() - time1))
 
 
-print(time.time() - time1)
+
+create_series_csv(df)
