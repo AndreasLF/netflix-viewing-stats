@@ -55,33 +55,20 @@ def set_runtime(row):
         
     return runtime
 
+def create_movies_csv(df):
+    # Only look at the movies
+    df = df[df['type'] == "movie"]
+    # df = df.iloc[:5,:]
 
-# track time spent
-time1 = time.time()
+    # Set the runtime column
+    df["runtime"] = df.apply(set_runtime, axis=1)
+    # df = df.dropna()
 
-file_path = "NetflixViewingHistory.csv"
+    # Print time it took
+    print(time.time() - time1)
 
-df = pd.read_csv(file_path)
-
-# Classify if it is a series or a movie based on the colons in the title
-df["type"] = ["series" if len(y.split(":")) >= 3 else "movie" for y in df["Title"]]
-
-# # Only look at the movies
-# df = df[df['type'] == "movie"]
-# # df = df.iloc[:5,:]
-
-# # Set the runtime column
-# df["runtime"] = df.apply(set_runtime, axis=1)
-# # df = df.dropna()
-
-# # Print time it took
-# print(time.time() - time1)
-
-# # Write results to a csv file
-# df.to_csv("netflix_movies_runtime.csv")
-
-# print(df)
-
+    # Write results to a csv file
+    df.to_csv("netflix_movies_runtime.csv")
 
 def create_series_csv(df):
     # Only look at series
@@ -96,7 +83,6 @@ def create_series_csv(df):
 
     df_new = pd.DataFrame(columns = ["Title", "Date", "type", "series_title", "runtime"])
     for name, group in grouped:
-
         # Create series object and get the runtime
         series = NetflixSeries(name)
         series.set_tmdb_api_key_from_file("tmdb-api-key.txt")
@@ -106,11 +92,25 @@ def create_series_csv(df):
         group["runtime"] = runtime
 
         df_new = df_new.append(group)
-
-        df_new.to_csv("netflix_series_runtime.csv")
-
-    print("It took {} minutes to finish".format(time.time() - time1))
+        print(name)
 
 
+    df_new.to_csv("netflix_series_runtime.csv")
 
-create_series_csv(df)
+
+
+
+
+# track time spent
+time1 = time.time()
+
+file_path = "NetflixViewingHistory.csv"
+
+df = pd.read_csv(file_path)
+
+# Classify if it is a series or a movie based on the colons in the title
+df["type"] = ["series" if len(y.split(":")) >= 3 else "movie" for y in df["Title"]]
+
+create_movies_csv(df)
+
+print("It took {} minutes to finish".format(time.time() - time1))
