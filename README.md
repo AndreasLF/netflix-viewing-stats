@@ -5,3 +5,6 @@ It is only tested on the Danish Netflix and from a Danish IP address (Google sea
 
 Only a rough estimate can be provided since Netflix only provides a title and a date in their viewing history. 
 The program makes searches on TMDB and retrieves the runtime from the first search result (it does not check if it is the correct movie/series) if no match is found it tries to do a Google search with option "site:netflix.com" and scrape the runtime from Netflix' website.
+
+Also, Netflix only saves a watched title once, which means if you watch it again the old one is removed from the viewing history. Hence, no duplicates.
+
