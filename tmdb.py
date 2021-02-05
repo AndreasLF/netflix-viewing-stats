@@ -85,7 +85,6 @@ class NetflixMovie:
             return None
 
         return result
-
     
     def get_netflix_english_title(self):
         """ Try to scrape the title from Netflix and get the english translation.
@@ -212,7 +211,100 @@ class NetflixMovie:
         
         return runtime
 
+class NetflixSeries:
+    """ Netflix series containing series title and the date it was watched.
+
+    Args:
+        series_title (str): The title of the series.
+        date_watched (str): The date the movie was watched.
+
+    Attributes:
+        title (str): Movie title.
+        date_watched (int): The date the movie was watched.
+        self.API_KEY (str): TMDB API_KEY
+    """
+    def __init__(self, series_title, date_watched=None): 
+        self.title = series_title
+        self.date_watched = date_watched
+
+    def set_tmdb_api_key_from_file(self, path):
+        """ Set the TMDB API key from file. Has to be json format.
+
+        Args:
+            path (str): Txt file path.
+        """
+        with open(path) as f:
+            json_data = json.load(f)
+            self.API_KEY = json_data["api"]
+            f.close()
+    
+    def __tmdb_query(self, query):
+        """Make TMDB api request.
+
+        Notice that the language is set to Danish. Netflix results will be in Danish
+
+        Args:
+            query (str): Api query.
+
+        Returns:
+            json: Results. 
+        """
+
+        url = "https://api.themoviedb.org/3/{}".format(query)
+        webURL = urlopen(url)
+        data = webURL.read()
+        encoding = webURL.info().get_content_charset('utf-8')
+        JSON_object = json.loads(data.decode(encoding))
+
+        return JSON_object
+
+        
+    def get_runtime(self):
+        """ Gets the series runtime.
+
+        Returns:
+            int: Series runtime in minutes.
+        """
+        title = self.title
+        api_key = self.API_KEY
+
+        # Parse search string
+        search_string = quote(title)
+        # Create the search url
+        query = "search/tv?api_key={}&page=1&query={}".format(api_key, search_string)
+        result = self.__tmdb_query(query)
+
+        if result["results"]:
+
+            try:
+                tv_id = result["results"][0]["id"]
+            except:
+                return None
+
+            # Get tv series
+            query = "tv/{}?api_key={}&append_to_response=external_ids".format(tv_id, api_key)
+            result = self.__tmdb_query(query)
+
+            try: 
+                runtime = result["episode_run_time"][0]
+            except:
+                return None
+        else: 
+            runtime = None
+
+        return runtime
    
+time1 = time.time()
+
+series = NetflixSeries("After Life", "Date")
+series.set_tmdb_api_key_from_file("tmdb-api-key.txt")
+# series.allow_netflix_scraping = True
+runtime = series.get_runtime()
+
+print(time.time() - time1)
+
+print(runtime)
+
 # time1 = time.time()
 
 # movie = NetflixMovie("Codename: Geronimo", "Date")
@@ -386,26 +478,6 @@ def get_episode_imdb_id(api_key, title, episode_name, season_number=None):
                         imdb_id = None
                 # imdb_id = None
     return imdb_id
-
-def get_series_runtime(api_key, title):
-     # Parse search string
-    search_string = quote(title)
-    # Create the search url
-    query = "search/tv?api_key={}&page=1&query={}".format(api_key, search_string)
-    result = tmdb(query)
-
-    if result["results"]:
-        tv_id = result["results"][0]["id"]
-
-        # Get tv series
-        query = "tv/{}?api_key={}&append_to_response=external_ids".format(tv_id, api_key)
-        result = tmdb(query)
-
-        runtime = result["episode_run_time"][0]
-    else: 
-        runtime = None
-
-    return runtime
 
 
 # API_KEY = get_api_key_from_file('tmdb-api-key.txt')
